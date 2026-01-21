@@ -2,467 +2,280 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>واجهة عدّ فئات النقود</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>مدير مصاريف المنزل</title>
     
+    <!-- إعدادات الأيقونة للآيفون (Apple Touch Icon) -->
+    <!-- يمكنك تغيير هذا الرابط برابط صورتك الخاصة -->
+    <link rel="apple-touch-icon" href="invoice.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="مصاريف البيت">
+
+    <!-- Manifest لإعدادات الأيقونة في أندرويد ومتصفح كروم -->
+    <link rel="manifest" href="invoice.png">
+
+    <!-- Tailwind & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;600;700&display=swap');
         body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f8fafc; /* slate-50 */
+            font-family: 'Noto Sans Arabic', sans-serif;
+            background-color: #f8fafc;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        /* إخفاء أزرار زيادة/نقصان الأرقام في المتصفح */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
-        /* تنسيق الطباعة */
-        @media print {
-            body { background: white !important; }
-            .no-print { display: none !important; }
-            input { border: none !important; box-shadow: none !important; background: transparent !important; }
-            .card-shadow { box-shadow: none !important; border: 1px solid #ddd !important; }
-        }
-        
-        /* تأثيرات التحويل */
-        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .tab-content.active { display: block; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .ios-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .ios-top { padding-top: env(safe-area-inset-top); }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 text-right text-slate-900">
+<body class="ios-bottom ios-top">
 
-    <div class="mx-auto max-w-5xl">
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-md card-shadow overflow-hidden">
-            
-            <div class="space-y-4 border-b border-slate-200 bg-gradient-to-l from-indigo-50 to-white p-6">
-                <div class="text-center space-y-1">
-                    <h1 class="text-2xl font-bold tracking-tight">واجهة عدّ فئات النقود</h1>
-                    <div class="text-sm text-slate-500">
-                        أدخل عدد كل فئة، وأدخل الكاش الافتتاحي وصافي المبيعات، وسيتم التحقق من الزيادة/النقصان.
-                    </div>
-                </div>
-
-                <div class="bg-slate-100 p-1 rounded-2xl flex flex-row-reverse w-full">
-                    <button onclick="switchTab('credit')" id="tab-btn-credit" class="flex-1 rounded-xl py-2 text-sm font-medium transition-all text-slate-500 hover:text-slate-900">
-                        بطاقة ائتمان
-                    </button>
-                    <button onclick="switchTab('cash')" id="tab-btn-cash" class="flex-1 rounded-xl py-2 text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm">
-                        نقد
-                    </button>
-                </div>
-
-                <div id="content-cash" class="tab-content active mt-4">
-                    
-                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div class="flex gap-2 justify-end order-1 md:order-2">
-                            <button onclick="setCurrency('ILS')" id="curr-ILS" class="h-9 px-4 rounded-xl text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700">ILS</button>
-                            <button onclick="setCurrency('JOD')" id="curr-JOD" class="h-9 px-4 rounded-xl text-sm font-medium transition-colors border border-slate-200 hover:bg-slate-100 bg-transparent text-slate-900">JOD</button>
-                            <button onclick="setCurrency('USD')" id="curr-USD" class="h-9 px-4 rounded-xl text-sm font-medium transition-colors border border-slate-200 hover:bg-slate-100 bg-transparent text-slate-900">USD</button>
-                        </div>
-                        <div class="text-left text-sm text-slate-500 order-2 md:order-1 ml-auto">اختيار العملة</div>
-                    </div>
-
-                    <div class="h-[1px] bg-slate-200 my-4"></div>
-
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">الكاش الافتتاحي</div>
-                            <input type="text" id="openingCash" oninput="updateCalculations()" inputmode="decimal" placeholder="0.000" class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 mt-2 text-right">
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">صافي المبيعات اليوم</div>
-                            <input type="text" id="netSales" oninput="updateCalculations()" inputmode="decimal" placeholder="0.000" class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 mt-2 text-right">
-                        </div>
-                    </div>
-
-                    <div class="h-[1px] bg-slate-200 my-4"></div>
-
-                    <div class="rounded-2xl border border-slate-200 bg-white/80 overflow-hidden">
-                        <table class="w-full caption-bottom text-sm">
-                            <thead class="[&_tr]:border-b">
-                                <tr class="border-b border-slate-200 bg-slate-50 transition-colors">
-                                    <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">قيمة الفئة</th>
-                                    <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">العدد</th>
-                                    <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">الإجمالي</th>
-                                </tr>
-                            </thead>
-                            <tbody id="denominations-body" class="[&_tr:last-child]:border-0">
-                                </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-4 grid gap-3 md:grid-cols-3">
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">المجموع الحقيقي</div>
-                            <div id="display-realTotal" class="mt-1 text-2xl font-semibold tabular-nums">0.000 ILS</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">النقد المعدود</div>
-                            <div id="display-countedCash" class="mt-1 text-2xl font-semibold tabular-nums">0.000 ILS</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">بطاقة ائتمان</div>
-                            <div id="display-creditTotal-summary" class="mt-1 text-2xl font-semibold tabular-nums">0.000 ILS</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                            <div class="text-sm text-slate-500">المجموع المتوقع</div>
-                            <div id="display-expectedTotal" class="mt-1 text-2xl font-semibold tabular-nums">0.000 ILS</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <div id="variance-box" class="rounded-2xl border p-4 bg-emerald-50 border-emerald-200">
-                            <div class="text-sm text-slate-500">الزيادة / النقصان في المجموع</div>
-                            <div id="display-variance" class="mt-1 text-lg font-semibold tabular-nums text-slate-900">مطابق (0.000)</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end no-print">
-                        <button onclick="resetAll()" class="inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2 gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74-2.74L3 12"/><path d="M3 3v9h9"/></svg>
-                            تصفير
-                        </button>
-                        <button onclick="onSave()" class="inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 px-4 py-2 gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8V3"/></svg>
-                            حفظ
-                        </button>
-                        <button onclick="onSaveAndPrint()" class="inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700 h-10 px-4 py-2 gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                            حفظ وطباعة
-                        </button>
-                    </div>
-                </div>
-
-                <div id="content-credit" class="tab-content mt-4">
-                    <div class="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                        <div class="flex flex-row-reverse items-center justify-between gap-3">
-                            <div>
-                                <div class="text-sm text-slate-500">بطاقة ائتمان</div>
-                                <div class="mt-1 text-xs text-slate-500">
-                                    عند إدخال المبلغ اضغط (إضافة) ليتم احتسابه ضمن مجموع بطاقات الائتمان.
-                                </div>
-                            </div>
-                            <div class="text-sm tabular-nums text-slate-500">
-                                المجموع: 
-                                <span id="credit-tab-total" class="font-semibold text-slate-900">0.000 ILS</span>
-                            </div>
-                        </div>
-
-                        <div class="h-[1px] bg-slate-200 my-4"></div>
-
-                        <div class="flex flex-col gap-3 md">
-                            <div class="w-full md:w-1/3">
-                                <div class="mb-1 text-sm text-right font-medium">المبلغ</div>
-                                <input id="creditInputAmount" type="text" inputmode="decimal" placeholder="0.000" class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 text-right">
-                            </div>
-                            <div class="w-full md:w-2/3">
-                                <div class="mb-1 text-sm text-right font-medium">ملاحظات</div>
-                                <input id="creditInputNote" type="text" placeholder="اختياري" class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 text-right">
-                            </div>
-                        </div>
-
-                        <div class="mt-3 flex justify-end">
-                            <button id="btnAddCredit" onclick="addCreditEntry()" class="inline-flex items-center justify-center rounded-xl text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700 h-9 px-4 py-2 gap-2 opacity-50 cursor-not-allowed" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                إضافة
-                            </button>
-                        </div>
-
-                        <div class="h-[1px] bg-slate-200 my-4"></div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-                            <table class="w-full caption-bottom text-sm">
-                                <thead class="[&_tr]:border-b">
-                                    <tr class="border-b border-slate-200 bg-slate-50 transition-colors">
-                                        <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">المبلغ</th>
-                                        <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">ملاحظات</th>
-                                        <th class="h-10 px-4 text-right align-middle font-medium text-slate-500">حذف</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="credit-table-body" class="[&_tr:last-child]:border-0">
-                                    <tr>
-                                        <td class="p-4 text-right text-slate-500 align-middle" colspan="3">لا يوجد عمليات بطاقات مضافة بعد.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-6 pb-12 rounded-b-[2.5rem] shadow-xl">
+        <div class="max-w-lg mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">مصاريف البيت</h1>
+                <p class="text-blue-100 text-sm opacity-80" id="date-display"></p>
             </div>
+            <button onclick="openModal('people-modal')" class="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <div class="max-w-lg mx-auto mt-8 bg-white/10 p-5 rounded-3xl border border-white/20">
+            <p class="text-blue-100 text-xs mb-1 uppercase tracking-wider">إجمالي المصاريف</p>
+            <div class="flex items-baseline gap-2">
+                <span id="total-amount" class="text-4xl font-black">0.00</span>
+                <span class="text-xl">₪</span>
+            </div>
+        </div>
+    </header>
 
-            <div class="p-6 pt-0 mt-6">
-                <div class="text-xs text-slate-500">
-                    معادلة التحقق المستخدمة: المجموع المتوقع = الكاش الافتتاحي + صافي المبيعات، والمجموع الحقيقي = النقد المعدود + بطاقة ائتمان، والفرق = الحقيقي - المتوقع.
+    <main class="max-w-lg mx-auto p-4 -mt-6 space-y-6 pb-28">
+        
+        <!-- قسم المقاصة الذكية -->
+        <div id="clearing-section" class="hidden animate-pulse">
+            <div class="bg-amber-50 border border-amber-100 p-5 rounded-[1.5rem] shadow-sm">
+                <h3 class="text-amber-800 font-bold mb-3 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 fill-amber-500 text-amber-500"></i>
+                    تسوية الديون المقترحة
+                </h3>
+                <div id="clearing-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- الأرصدة -->
+        <section>
+            <h3 class="text-slate-800 font-bold mb-4 flex items-center gap-2 px-2">
+                <i data-lucide="layout-grid" class="text-blue-600 w-5 h-5"></i>
+                حالة أرصدة السكان
+            </h3>
+            <div id="balances-list" class="space-y-3"></div>
+        </section>
+
+        <!-- سجل العمليات -->
+        <section>
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h3 class="text-slate-800 font-bold flex items-center gap-2">
+                    <i data-lucide="clock" class="text-blue-600 w-5 h-5"></i>
+                    آخر الفواتير
+                </h3>
+                <button onclick="clearAllData()" class="text-xs text-red-400 font-medium">مسح الكل</button>
+            </div>
+            <div id="history-list" class="space-y-3"></div>
+        </section>
+
+    </main>
+
+    <!-- الزر العائم للإضافة -->
+    <div class="fixed bottom-8 left-0 right-0 flex justify-center px-6">
+        <button onclick="openModal('expense-modal')" class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-2xl shadow-2xl shadow-blue-400/40 flex items-center justify-center gap-3 font-bold text-lg active:scale-95 transition-transform">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+            أضف فاتورة جديدة
+        </button>
+    </div>
+
+    <!-- Modal: إدارة السكان -->
+    <div id="people-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">إدارة سكان البيت</h3>
+                <button onclick="closeModal('people-modal')" class="p-2 bg-slate-100 rounded-full text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="p-name" placeholder="اسم الساكن..." class="flex-1 bg-slate-50 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="addPerson()" class="bg-blue-600 text-white px-6 rounded-2xl font-bold">إضافة</button>
+            </div>
+            <div id="people-list-modal" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Modal: إضافة فاتورة -->
+    <div id="expense-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">تفاصيل الفاتورة</h3>
+                <button onclick="closeModal('expense-modal')" class="p-2 bg-slate-100 rounded-full text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="e-desc" placeholder="وصف الفاتورة (كهرباء، ماء...)" class="w-full bg-slate-50 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex gap-4">
+                    <input type="number" id="e-amount" placeholder="المبلغ" class="w-1/2 bg-slate-50 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                    <select id="e-payer" class="w-1/2 bg-slate-50 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <label class="text-sm font-bold text-slate-500">مشاركة مع:</label>
+                        <button onclick="selectAll(true)" class="text-xs text-blue-600 font-bold">تحديد الكل</button>
+                    </div>
+                    <div id="participants-grid" class="grid grid-cols-2 gap-2"></div>
+                </div>
+                <button onclick="saveExpense()" class="w-full bg-blue-600 text-white py-5 rounded-3xl font-bold text-xl mt-4">حفظ البيانات</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- البيانات والثوابت ---
-        const currencyPresets = {
-            ILS: [200, 100, 50, 20, 10, 5, 2, 1, 0.5],
-            JOD: [50, 20, 10, 5, 1, 0.5, 0.25, 0.1, 0.05],
-            USD: [100, 50, 20, 10, 5, 2, 1, 0.5, 0.25]
-        };
+        let db = JSON.parse(localStorage.getItem('house_v3')) || { people: [], logs: [] };
 
-        let state = {
-            currency: "ILS",
-            counts: {}, 
-            openingCash: 0,
-            netSales: 0,
-            creditEntries: [], 
-        };
-
-        // --- دوال مساعدة ---
-        function round3(n) { return Math.round(n * 1000) / 1000; }
-        function formatMoney(val, curr) { return `${round3(val).toFixed(3)} ${curr}`; }
-        function safeAmount(str) { const n = parseFloat(str); return isNaN(n) ? 0 : n; }
-        function safeInt(str) { const n = parseFloat(str); return isNaN(n) ? 0 : Math.floor(n); }
-        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-
-        // --- التهيئة الأولية ---
-        document.addEventListener('DOMContentLoaded', () => {
-            renderDenominationTable();
-            updateCalculations();
-            setupCreditInputListener();
-        });
-
-        // --- إدارة التبويبات ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`content-${tabName}`).classList.add('active');
-
-            const btnCash = document.getElementById('tab-btn-cash');
-            const btnCredit = document.getElementById('tab-btn-credit');
-
-            if (tabName === 'cash') {
-                btnCash.className = "flex-1 rounded-xl py-2 text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm";
-                btnCredit.className = "flex-1 rounded-xl py-2 text-sm font-medium transition-all text-slate-500 hover:text-slate-900";
-            } else {
-                btnCredit.className = "flex-1 rounded-xl py-2 text-sm font-medium transition-all bg-indigo-600 text-white shadow-sm";
-                btnCash.className = "flex-1 rounded-xl py-2 text-sm font-medium transition-all text-slate-500 hover:text-slate-900";
-            }
-        }
-
-        // --- إدارة العملة ---
-        function setCurrency(curr) {
-            state.currency = curr;
-            state.counts = {}; 
+        function updateUI() {
+            localStorage.setItem('house_v3', JSON.stringify(db));
             
-            ['ILS', 'JOD', 'USD'].forEach(c => {
-                const btn = document.getElementById(`curr-${c}`);
-                if (c === curr) {
-                    btn.className = "h-9 px-4 rounded-xl text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700";
-                } else {
-                    btn.className = "h-9 px-4 rounded-xl text-sm font-medium transition-colors border border-slate-200 hover:bg-slate-100 bg-transparent text-slate-900";
-                }
+            // حساب الإجمالي
+            const total = db.logs.reduce((s, e) => s + e.amount, 0);
+            document.getElementById('total-amount').innerText = total.toLocaleString();
+
+            // حساب الأرصدة
+            const balances = {};
+            db.people.forEach(p => balances[p.id] = 0);
+            db.logs.forEach(log => {
+                balances[log.payerId] += log.amount;
+                const share = log.amount / log.pIds.length;
+                log.pIds.forEach(id => balances[id] -= share);
             });
 
-            renderDenominationTable();
-            updateCalculations();
-        }
-
-        // --- بناء جدول الفئات ---
-        function renderDenominationTable() {
-            const tbody = document.getElementById('denominations-body');
-            tbody.innerHTML = '';
-            
-            const denoms = currencyPresets[state.currency];
-            
-            denoms.forEach((d, idx) => {
-                const count = state.counts[d] || 0;
-                const total = d * count;
-                
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-200 transition-colors hover:bg-slate-50/50 data-[state=selected]:bg-slate-100";
-                
-                // تم التعديل هنا: ترتيب الخلايا
-                tr.innerHTML = `
-                    <td class="p-4 align-middle text-right font-medium text-slate-900">
-                        ${d}
-                    </td>
-                    <td class="p-4 align-middle text-right">
-                        <input type="number" min="0" placeholder="0" 
-                            class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 text-right"
-                            oninput="updateCount(${d}, this.value)"
-                            value="${count === 0 ? '' : count}">
-                    </td>
-                    <td class="p-4 align-middle text-right tabular-nums text-slate-700" id="row-total-${d}">
-                        ${formatMoney(total, state.currency)}
-                    </td>
+            // رندر الأرصدة
+            const bList = document.getElementById('balances-list');
+            bList.innerHTML = db.people.map(p => {
+                const b = balances[p.id] || 0;
+                return `
+                    <div class="card p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-lg">${p.name[0]}</div>
+                            <div>
+                                <p class="font-bold text-slate-800">${p.name}</p>
+                                <p class="text-[10px] text-slate-400">${b >= 0 ? 'له مستحقات' : 'عليه ديون'}</p>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-black text-lg ${b >= 0 ? 'text-green-600' : 'text-red-500'}">
+                                ${b >= 0 ? '+' : ''}${b.toFixed(2)} ₪
+                            </p>
+                        </div>
+                    </div>
                 `;
-                tbody.appendChild(tr);
-            });
-        }
+            }).join('');
 
-        // --- تحديث العدادات والحسابات ---
-        function updateCount(denom, val) {
-            state.counts[denom] = safeInt(val);
-            const totalCell = document.getElementById(`row-total-${denom}`);
-            if(totalCell) {
-                totalCell.innerText = formatMoney(denom * state.counts[denom], state.currency);
-            }
-            updateCalculations();
-        }
+            // رندر المقاصة
+            renderClearing(balances);
 
-        function updateCalculations() {
-            state.openingCash = safeAmount(document.getElementById('openingCash').value);
-            state.netSales = safeAmount(document.getElementById('netSales').value);
+            // رندر السجل
+            document.getElementById('history-list').innerHTML = db.logs.slice().reverse().map(l => `
+                <div class="card p-4 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-slate-700">${l.desc}</p>
+                        <p class="text-[10px] text-slate-400">دفعها ${db.people.find(p=>p.id==l.payerId)?.name}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-slate-500">${l.amount} ₪</span>
+                        <button onclick="delExp('${l.id}')" class="text-slate-300"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `).join('');
 
-            let countedCash = 0;
-            const denoms = currencyPresets[state.currency];
-            denoms.forEach(d => {
-                countedCash += d * (state.counts[d] || 0);
-            });
-
-            const creditTotal = state.creditEntries.reduce((acc, curr) => acc + curr.amount, 0);
-            const realTotal = countedCash + creditTotal;
-            const expectedTotal = state.openingCash + state.netSales;
-            const variance = round3(realTotal - expectedTotal);
-
-            document.getElementById('display-countedCash').innerText = formatMoney(countedCash, state.currency);
-            document.getElementById('display-creditTotal-summary').innerText = formatMoney(creditTotal, state.currency);
-            document.getElementById('display-realTotal').innerText = formatMoney(realTotal, state.currency);
-            document.getElementById('display-expectedTotal').innerText = formatMoney(expectedTotal, state.currency);
-            document.getElementById('credit-tab-total').innerText = formatMoney(creditTotal, state.currency);
-
-            const vBox = document.getElementById('variance-box');
-            const vText = document.getElementById('display-variance');
+            // تحديث الخيارات
+            const sel = document.getElementById('e-payer');
+            sel.innerHTML = db.people.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
             
-            vBox.className = "rounded-2xl border p-4 transition-colors";
+            document.getElementById('participants-grid').innerHTML = db.people.map(p => `
+                <label class="flex items-center gap-2 bg-slate-50 p-3 rounded-2xl cursor-pointer">
+                    <input type="checkbox" value="${p.id}" class="p-check w-5 h-5 accent-blue-600">
+                    <span class="text-sm font-medium">${p.name}</span>
+                </label>
+            `).join('');
 
-            if (Math.abs(variance) <= 0.0005) {
-                vBox.classList.add('bg-emerald-50', 'border-emerald-200');
-                vText.innerText = "مطابق (0.000)";
-            } else if (variance > 0) {
-                vBox.classList.add('bg-amber-50', 'border-amber-200');
-                vText.innerText = `زيادة في المجموع: ${formatMoney(Math.abs(variance), state.currency)}`;
-            } else {
-                vBox.classList.add('bg-rose-50', 'border-rose-200');
-                vText.innerText = `نقص في المجموع: ${formatMoney(Math.abs(variance), state.currency)}`;
-            }
+            document.getElementById('people-list-modal').innerHTML = db.people.map(p => `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl">
+                    <span class="font-bold">${p.name}</span>
+                    <button onclick="delPerson('${p.id}')" class="text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
         }
 
-        // --- إدارة بطاقات الائتمان ---
-        function setupCreditInputListener() {
-            const input = document.getElementById('creditInputAmount');
-            const btn = document.getElementById('btnAddCredit');
-            
-            input.addEventListener('input', () => {
-                const val = parseFloat(input.value);
-                if (val > 0) {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                } else {
-                    btn.disabled = true;
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-            });
-        }
-
-        function addCreditEntry() {
-            const amtInput = document.getElementById('creditInputAmount');
-            const noteInput = document.getElementById('creditInputNote');
-            const amt = safeAmount(amtInput.value);
-            
-            if (amt <= 0) return;
-
-            const entry = {
-                id: generateId(),
-                amount: amt,
-                note: noteInput.value.trim()
-            };
-
-            state.creditEntries.unshift(entry); 
-            
-            amtInput.value = '';
-            noteInput.value = '';
-            document.getElementById('btnAddCredit').disabled = true;
-            document.getElementById('btnAddCredit').classList.add('opacity-50', 'cursor-not-allowed');
-
-            renderCreditTable();
-            updateCalculations();
-        }
-
-        function removeCreditEntry(id) {
-            state.creditEntries = state.creditEntries.filter(e => e.id !== id);
-            renderCreditTable();
-            updateCalculations();
-        }
-
-        function renderCreditTable() {
-            const tbody = document.getElementById('credit-table-body');
-            tbody.innerHTML = '';
-
-            if (state.creditEntries.length === 0) {
-                tbody.innerHTML = `<tr><td class="p-4 text-right text-slate-500 align-middle" colspan="3">لا يوجد عمليات بطاقات مضافة بعد.</td></tr>`;
-                return;
+        function renderClearing(balances) {
+            const debtors = [], creditors = [];
+            for (let id in balances) {
+                if (balances[id] < -0.1) debtors.push({id, amt: Math.abs(balances[id])});
+                else if (balances[id] > 0.1) creditors.push({id, amt: balances[id]});
             }
 
-            state.creditEntries.forEach(e => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-200 transition-colors hover:bg-slate-50/50";
-                tr.innerHTML = `
-                    <td class="p-4 align-middle text-right tabular-nums font-medium">
-                        ${formatMoney(e.amount, state.currency)}
-                    </td>
-                    <td class="p-4 align-middle text-right text-slate-600">
-                        ${e.note || '-'}
-                    </td>
-                    <td class="p-4 align-middle text-right">
-                        <button onclick="removeCreditEntry('${e.id}')" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-slate-100 h-8 w-8 text-slate-500 hover:text-red-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        </button>
-                    </td>
+            const list = document.getElementById('clearing-list');
+            const sec = document.getElementById('clearing-section');
+            list.innerHTML = '';
+
+            if (debtors.length === 0) { sec.classList.add('hidden'); return; }
+            sec.classList.remove('hidden');
+
+            while (debtors.length && creditors.length) {
+                const d = debtors[0], c = creditors[0];
+                const v = Math.min(d.amt, c.amt);
+                list.innerHTML += `
+                    <div class="text-sm text-amber-900 bg-white/60 p-2 rounded-xl border border-amber-200/50">
+                        <b>${db.people.find(p=>p.id==d.id).name}</b> ➔ <b>${db.people.find(p=>p.id==c.id).name}</b> : <span class="font-bold">${v.toFixed(2)} ₪</span>
+                    </div>
                 `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- الأزرار السفلية ---
-        function resetAll() {
-            if(confirm('هل أنت متأكد من تصفير جميع البيانات؟')) {
-                state.counts = {};
-                state.openingCash = 0;
-                state.netSales = 0;
-                state.creditEntries = [];
-                
-                document.getElementById('openingCash').value = '';
-                document.getElementById('netSales').value = '';
-                document.getElementById('creditInputAmount').value = '';
-                document.getElementById('creditInputNote').value = '';
-
-                renderDenominationTable();
-                renderCreditTable();
-                updateCalculations();
+                d.amt -= v; c.amt -= v;
+                if (d.amt < 0.1) debtors.shift();
+                if (c.amt < 0.1) creditors.shift();
             }
         }
 
-        function onSave() {
-            console.log("Saving Data:", state);
-            alert('تم حفظ البيانات بنجاح (محاكاة). راجع Console لرؤية الكائن.');
+        function addPerson() {
+            const n = document.getElementById('p-name').value.trim();
+            if (n) { db.people.push({id: Date.now().toString(), name: n}); updateUI(); document.getElementById('p-name').value=''; }
         }
 
-        function onSaveAndPrint() {
-            onSave();
-            setTimeout(() => {
-                window.print();
-            }, 500);
+        function saveExpense() {
+            const desc = document.getElementById('e-desc').value;
+            const amt = parseFloat(document.getElementById('e-amount').value);
+            const payer = document.getElementById('e-payer').value;
+            const pIds = Array.from(document.querySelectorAll('.p-check:checked')).map(c => c.value);
+
+            if (desc && amt && pIds.length) {
+                db.logs.push({id: Date.now().toString(), desc, amount: amt, payerId: payer, pIds});
+                updateUI(); closeModal('expense-modal');
+                document.getElementById('e-desc').value=''; document.getElementById('e-amount').value='';
+            }
         }
+
+        function delExp(id) { db.logs = db.logs.filter(l => l.id != id); updateUI(); }
+        function delPerson(id) { db.people = db.people.filter(p => p.id != id); updateUI(); }
+        function clearAllData() { if(confirm('هل أنت متأكد من مسح جميع البيانات؟')) { db = {people:[], logs:[]}; updateUI(); } }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function selectAll(v) { document.querySelectorAll('.p-check').forEach(c => c.checked = v); }
+
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        updateUI();
     </script>
 </body>
-
 </html>
